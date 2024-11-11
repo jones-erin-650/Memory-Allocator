@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,7 +30,103 @@ public class Mallocator {
 
 //        writeToOutput(Algorithms.FF, processList);
 
+        List<String[]> hardcodedOutput = new ArrayList<>();
+        hardcodedOutput.add(new String[]{"100", "310", "2"});
+        hardcodedOutput.add(new String[]{"600", "790", "1"});
+        hardcodedOutput.add(new String[]{"1500", "1705", "3"});
 
+
+    }
+
+    public static class MemorySlot {
+        int start;
+        int end;
+        int size;
+
+        MemorySlot(int start, int end) {
+            this.start = start;
+            this.end = end;
+            this.size = end - start;
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public void setStart(int start) {
+            this.start = start;
+        }
+
+        public int getEnd() {
+            return end;
+        }
+
+        public void setEnd(int end) {
+            this.end = end;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public void setSize(int size) {
+            this.size = size;
+        }
+
+        @Override
+        public String toString() {
+            return "MemorySlot{" +
+                    "start=" + start +
+                    ", end=" + end +
+                    ", size=" + size +
+                    '}';
+        }
+    }
+
+    // Structure to represent a process (ID, size)
+    public static class Process {
+        int id;
+        int size;
+        boolean allocated;
+
+        Process(int id, int size) {
+            this.id = id;
+            this.size = size;
+            this.allocated = false;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public void setSize(int size) {
+            this.size = size;
+        }
+
+        public boolean isAllocated() {
+            return allocated;
+        }
+
+        public void setAllocated(boolean allocated) {
+            this.allocated = allocated;
+        }
+
+        @Override
+        public String toString() {
+            return "Process{" +
+                    "id=" + id +
+                    ", size=" + size +
+                    ", allocated=" + allocated +
+                    '}';
+        }
     }
 
     public enum Algorithms {
@@ -50,17 +147,17 @@ public class Mallocator {
         return new LinkedList<>();
     }
 
-    public static LinkedList<int[]> readMemoryInput(String memoryInput) {
+    public static LinkedList<MemorySlot> readMemoryInput(String memoryInput) {
         InputStream inputStream = Mallocator.class.getResourceAsStream(memoryInput);
         Scanner scanner = new Scanner(inputStream);
 
 //        First line is always the number of memoryblocks
-        int numberOfMemoryBlocks = Integer.parseInt(scanner.nextLine());
+        int numberOfMemorySlots = Integer.parseInt(scanner.nextLine());
 
-        LinkedList<int[]> memorySlots = new LinkedList<>();
+        LinkedList<MemorySlot> memorySlots = new LinkedList<>();
 
 //        Fill the memory list with individual memorySlots
-        for (int i = 0; i < numberOfMemoryBlocks; i++) {
+        for (int i = 0; i < numberOfMemorySlots; i++) {
 //              Split the line by the spaces
             String line = scanner.nextLine();
 //            Doing it with another scanner because doing line.split would require changing the variable's type a lot and that's not ideal
@@ -71,10 +168,10 @@ public class Mallocator {
             int endAddress = lineParser.nextInt();
 
 //            Starts off unallocated
-            int[] memoryBlock = {startAddress, endAddress, 0};
-            System.out.println("MemorySlot" + memoryBlock[0] + ": " + Arrays.toString(memoryBlock));
+            MemorySlot memorySlot = new MemorySlot(startAddress, endAddress);
+            System.out.println(memorySlot);
 
-            memorySlots.add(memoryBlock);
+            memorySlots.add(memorySlot);
 
             lineParser.close();
         }
@@ -84,16 +181,16 @@ public class Mallocator {
 
     }
 
-    public static LinkedList<int[]> readProcessInput(String processInput) {
+    public static LinkedList<Process> readProcessInput(String processInput) {
         InputStream inputStream = Mallocator.class.getResourceAsStream(processInput);
         Scanner scanner = new Scanner(inputStream);
 
 //        First line is always the number of processes
         int numberOfProcesses = Integer.parseInt(scanner.nextLine());
 
-        LinkedList<int[]> processList = new LinkedList<>();
+        LinkedList<Process> processList = new LinkedList<>();
 
-//        Fill the process list with individual processBlocks
+//        Fill the process list with individual processes
         for (int i = 0; i < numberOfProcesses; i++) {
 //              Split the line by the spaces
             String line = scanner.nextLine();
@@ -105,10 +202,10 @@ public class Mallocator {
             int processSize = lineParser.nextInt();
 
 //            Starts off unallocated
-            int[] processBlock = {processId, processSize, 0};
-            System.out.println("ProcessBlock" + processBlock[0] + ": " + Arrays.toString(processBlock));
+            Process process = new Process(processId, processSize);
+            System.out.println(process);
 
-            processList.add(processBlock);
+            processList.add(process);
 
             lineParser.close();
         }
@@ -116,7 +213,9 @@ public class Mallocator {
         return processList;
     }
 
-    public static void writeToOutput(Algorithms algorithm, List<String[]> outputData) throws Exception {
+    
+
+    public static void writeToFile(Algorithms algorithm, List<String[]> outputData) throws Exception {
         File outputFile = new File(algorithm.toString() + "output.data");
 
         PrintWriter writer = new PrintWriter(outputFile);
