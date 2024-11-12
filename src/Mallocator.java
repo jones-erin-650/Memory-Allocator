@@ -37,19 +37,19 @@ public class Mallocator {
 
 //        writeToOutput(Algorithms.FF, processList);
 
-        LinkedList<Process> hardcodedTestProcesses = new LinkedList<>();
-        hardcodedTestProcesses.add(new Process(1, 190, true));
-        hardcodedTestProcesses.add(new Process(2, 210, true));
-        hardcodedTestProcesses.add(new Process(3, 205, true));
+//        LinkedList<Process> hardcodedTestProcesses = new LinkedList<>();
+//        hardcodedTestProcesses.add(new Process(1, 190, true));
+//        hardcodedTestProcesses.add(new Process(2, 210, true));
+//        hardcodedTestProcesses.add(new Process(3, 205, true));
+//
+//        LinkedList<MemorySlot> hardcodedOutput = new LinkedList<>();
+//        hardcodedOutput.add(new MemorySlot(100, 310, 2));
+//        hardcodedOutput.add(new MemorySlot(600, 790, 1));
+//        hardcodedOutput.add(new MemorySlot(1500, 1705, 3));
 
-        LinkedList<MemorySlot> hardcodedOutput = new LinkedList<>();
-        hardcodedOutput.add(new MemorySlot(100, 310, 2));
-        hardcodedOutput.add(new MemorySlot(600, 790, 1));
-        hardcodedOutput.add(new MemorySlot(1500, 1705, 3));
+//        System.out.println("hardcodedOutput: " + hardcodedOutput);
 
-        System.out.println("hardcodedOutput: " + hardcodedOutput);
-
-        generateOutputLog(Algorithms.FF, hardcodedOutput, hardcodedTestProcesses);
+//        generateOutputLog(Algorithms.FF, hardcodedOutput, hardcodedTestProcesses);
 
 
 
@@ -165,7 +165,53 @@ public class Mallocator {
         BF
     }
 
-    public static LinkedList<int[]> firstFit(LinkedList<int[]> processList, LinkedList<int[]> memorySlots) {
+    public static LinkedList<int[]> firstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
+        LinkedList<MemorySlot> outputMemory = new LinkedList<>();
+
+        // Loop through the Processes
+        for (Process process : processList) {
+            // Instantiate currentProcess information to be easier to read
+            int processID = process.getId();
+            int processSize = process.getSize();
+
+            for (MemorySlot memorySlot : memoryList) {
+                int memoryStart = 0;
+                int memoryEnd = 0;
+
+                // Inner for loop to check if the current process can fit in any MemorySlot
+
+                // If the memorySlot is already allocated then skip it
+                if (memorySlot.getProcessID() != 0) {
+                    break;
+                } else if (processSize < memorySlot.getSize()) {
+                    // If currentProcess' size is less than the memorySlot's size then allocate it
+                    // Mark currentProcess as allocated for the output log's logic
+                    process.setAllocated(true);
+
+                    // Create a new memorySlot to be added to the output list
+                    // Change the size of the allocated process
+                    int allocatedMemoryEnd = memoryStart + processSize;
+
+                    MemorySlot allocatedMemorySlot = new MemorySlot(memoryStart, allocatedMemoryEnd, processID);
+
+                    allocatedMemorySlot.setProcessID(process.getId());
+
+                    // Add the new memorySlot to the new List
+                    outputMemory.add(allocatedMemorySlot);
+
+                    // Take the remaining space and create a new memorySlot to be added to the list
+                    int remainingSpace = memoryEnd - allocatedMemoryEnd;
+                    MemorySlot remainingMemory = new MemorySlot(allocatedMemoryEnd + 1, remainingSpace, 0);
+
+                    // Add that as a new slot in the list
+                    memoryList.add(remainingMemory);
+
+                }
+
+            }
+        }
+
+
         return new LinkedList<>();
     }
 
@@ -199,7 +245,7 @@ public class Mallocator {
 
 //            Starts off unallocated
             MemorySlot memorySlot = new MemorySlot(startAddress, endAddress);
-            System.out.println(memorySlot);
+//            System.out.println(memorySlot);
 
             memorySlots.add(memorySlot);
 
@@ -233,7 +279,7 @@ public class Mallocator {
 
 //            Starts off unallocated
             Process process = new Process(processId, processSize);
-            System.out.println(process);
+//            System.out.println(process);
 
             processList.add(process);
 
@@ -253,9 +299,9 @@ public class Mallocator {
 
             // Loop through the allocatedMemory and write the information
             for (MemorySlot memorySlot : allocatedMemory) {
-                System.out.println("memorySlot to be written to file: \n" + memorySlot);
+//                System.out.println("memorySlot to be written to file: \n" + memorySlot);
                 String test = (memorySlot.getStart() + " " + memorySlot.getEnd() + " " + memorySlot.getProcessID());
-                System.out.println("String to be written to file: \n" + test);
+//                System.out.println("String to be written to file: \n" + test);
 
                 writer.println(test);
             }
@@ -269,8 +315,8 @@ public class Mallocator {
                 }
             }
 
-            System.out.println("UnallocatedProcesses: " + unallocatedProcesses);
-            System.out.println("AllocatedProcesses: " + allocatedProcesses);
+//            System.out.println("UnallocatedProcesses: " + unallocatedProcesses);
+//            System.out.println("AllocatedProcesses: " + allocatedProcesses);
 
             // Write -unallocated processes or -0 if they're all allocated
             
