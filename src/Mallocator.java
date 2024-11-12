@@ -1,8 +1,10 @@
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -18,22 +20,28 @@ public class Mallocator {
 //      memorySlots[0]: addresses of start of a free memory slot
 //      memorySlots[1]: addresses of end of a free memory slot
 //      memorySlots[2]: 0 for unallocated 1 for allocated
-        LinkedList<int[]> memorySlots = readProcessInput(memoryInputFile);
+        LinkedList<MemorySlot> memoryList = readMemoryInput(memoryInputFile);
+        System.out.println("memoryList: \n" + memoryList);
 
 //      Contains the process data from Pinput.data
 //      processBlock[0]: process ID
 //      processBlock[1]: size of process
 //      processBlock[2]: 0 for unallocated 1 for allocated
-        LinkedList<int[]> processList = readProcessInput(processInputFile);
+        LinkedList<Process> processList = readProcessInput(processInputFile);
 
         System.out.println("processList: \n" + processList);
 
 //        writeToOutput(Algorithms.FF, processList);
 
-        List<String[]> hardcodedOutput = new ArrayList<>();
-        hardcodedOutput.add(new String[]{"100", "310", "2"});
-        hardcodedOutput.add(new String[]{"600", "790", "1"});
-        hardcodedOutput.add(new String[]{"1500", "1705", "3"});
+        LinkedList<MemorySlot> hardcodedOutput = new LinkedList<>();
+        hardcodedOutput.add(new MemorySlot(100, 310, 2));
+        hardcodedOutput.add(new MemorySlot(600, 790, 1));
+        hardcodedOutput.add(new MemorySlot(1500, 1705, 3));
+
+        System.out.println("hardcodedOutput: " + hardcodedOutput);
+
+        generateOutputLog(Algorithms.FF, hardcodedOutput, processList);
+
 
 
     }
@@ -42,35 +50,42 @@ public class Mallocator {
         int start;
         int end;
         int size;
+        // This way we can just see if there's a process in the MemorySlot using the class itself
+        int processID;
 
         MemorySlot(int start, int end) {
             this.start = start;
             this.end = end;
             this.size = end - start;
+            // Starts off as 0 to show that there's no process in it
+            this.processID = 0;
+        }
+
+        MemorySlot(int start, int end, int processID) {
+            this.start = start;
+            this.end = end;
+            this.size = end - start;
+            this.processID = processID;
         }
 
         public int getStart() {
             return start;
         }
 
-        public void setStart(int start) {
-            this.start = start;
-        }
-
         public int getEnd() {
             return end;
-        }
-
-        public void setEnd(int end) {
-            this.end = end;
         }
 
         public int getSize() {
             return size;
         }
 
-        public void setSize(int size) {
-            this.size = size;
+        public int getProcessID() {
+            return processID;
+        }
+
+        public void setProcessID(int processID) {
+            this.processID = processID;
         }
 
         @Override
@@ -78,7 +93,7 @@ public class Mallocator {
             return "MemorySlot{" +
                     "start=" + start +
                     ", end=" + end +
-                    ", size=" + size +
+                    ", processID=" + processID +
                     '}';
         }
     }
@@ -213,7 +228,42 @@ public class Mallocator {
         return processList;
     }
 
-    
+    public static void generateOutputLog(Algorithms algorithm, LinkedList<MemorySlot> allocatedMemory, LinkedList<Process> processes) {
+        try {
+            File outputFile = new File(algorithm.toString() + "output.data");
+            PrintWriter writer = new PrintWriter(new FileWriter(outputFile));
+            // This will be used to keep track of what processes are allocated and unallocated for the last line of the output log
+            List<Integer> allocatedProcesses = new ArrayList<>();
+            List<Integer> unallocatedProcesses = new ArrayList<>();
+            
+            // Loop through the allocatedMemory and write the information
+            for (MemorySlot memorySlot : allocatedMemory) {
+                System.out.println("memorySlot to be written to file: \n" + memorySlot);
+                String test = (memorySlot.getStart() + " " + memorySlot.getEnd() + " " + memorySlot.getProcessID());
+                System.out.println("String to be written to file: \n" + test);
+
+                writer.println("" + memorySlot.getStart() + memorySlot.getEnd() + memorySlot.getProcessID());
+            }
+            
+//            // Find the processes that aren't allocated
+//            for (int i = 0; i < processes.size(); i++) {
+//                Process currentProcess = processes.get(i);
+//
+//                if(!currentProcess.isAllocated()) {
+//                    unallocatedProcesses.add(currentProcess.getId());
+//                } else {
+//                    allocatedProcesses.add(currentProcess.id);
+//                }
+//            }
+
+            // Write -unallocated processes or -0 if they're all allocated
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
     public static void writeToFile(Algorithms algorithm, List<String[]> outputData) throws Exception {
         File outputFile = new File(algorithm.toString() + "output.data");
