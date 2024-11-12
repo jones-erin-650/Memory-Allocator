@@ -37,7 +37,10 @@ public class Mallocator {
 
 //        writeToOutput(Algorithms.FF, processList);
 
-        LinkedList<Process> hardcodedProcesses = new LinkedList<>();
+        LinkedList<Process> hardcodedTestProcesses = new LinkedList<>();
+        hardcodedTestProcesses.add(new Process(1, 190, true));
+        hardcodedTestProcesses.add(new Process(2, 210, true));
+        hardcodedTestProcesses.add(new Process(3, 205, true));
 
         LinkedList<MemorySlot> hardcodedOutput = new LinkedList<>();
         hardcodedOutput.add(new MemorySlot(100, 310, 2));
@@ -46,7 +49,7 @@ public class Mallocator {
 
         System.out.println("hardcodedOutput: " + hardcodedOutput);
 
-        generateOutputLog(Algorithms.FF, hardcodedOutput, processList);
+        generateOutputLog(Algorithms.FF, hardcodedOutput, hardcodedTestProcesses);
 
 
 
@@ -114,6 +117,12 @@ public class Mallocator {
             this.id = id;
             this.size = size;
             this.allocated = false;
+        }
+
+        Process(int id, int size, boolean allocated) {
+            this.id = id;
+            this.size = size;
+            this.allocated = allocated;
         }
 
         public int getId() {
@@ -251,18 +260,33 @@ public class Mallocator {
                 writer.println(test);
             }
 
-//            // Find the processes that aren't allocated
-//            for (int i = 0; i < processes.size(); i++) {
-//                Process currentProcess = processes.get(i);
-//
-//                if(!currentProcess.isAllocated()) {
-//                    unallocatedProcesses.add(currentProcess.getId());
-//                } else {
-//                    allocatedProcesses.add(currentProcess.id);
-//                }
-//            }
+            // Find the processes that aren't allocated
+            for (Process currentProcess : processes) {
+                if (!currentProcess.isAllocated()) {
+                    unallocatedProcesses.add(currentProcess.getId());
+                } else {
+                    allocatedProcesses.add(currentProcess.id);
+                }
+            }
+
+            System.out.println("UnallocatedProcesses: " + unallocatedProcesses);
+            System.out.println("AllocatedProcesses: " + allocatedProcesses);
 
             // Write -unallocated processes or -0 if they're all allocated
+            
+            // ALl processes are allocated
+            if (allocatedProcesses.size() == processes.size()) {
+                writer.println("-0");
+            } else {
+                writer.print("-");
+                for (int i = 0; i < unallocatedProcesses.size(); i++) {
+                    if (i==0) {
+                        writer.print(unallocatedProcesses.get(i));
+                    } else {
+                        writer.print("," +  unallocatedProcesses.get(i));
+                    }
+                }
+            }
 
             writer.close();
 
