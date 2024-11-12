@@ -13,6 +13,8 @@ public class Mallocator {
 
     public static void main(String[] args) throws Exception {
         int datasets = 3;
+        File outputDir = new File("outputs");
+        File inputDir = new File("inputs");
 
         for (int i = 0; i < datasets; i++) {
             System.out.println("\nRunning Algorithms on dataset " + i + "...\n");
@@ -32,9 +34,13 @@ public class Mallocator {
 
 
             LinkedList<MemorySlot> ffOutput = firstFit(processList, memoryList);
-            generateOutputLog(Algorithms.FF, ffOutput, processList, i);
+            generateOutputLog(Algorithms.FF, ffOutput, processList, i, outputDir);
 
-            // TODO: Generate the other algorithms
+            LinkedList<MemorySlot> bfOutput = bestFit(processList, memoryList);
+            generateOutputLog(Algorithms.BF, ffOutput, processList, i, outputDir);
+
+            LinkedList<MemorySlot> wfOutput = worstFit(processList, memoryList);
+            generateOutputLog(Algorithms.WF, ffOutput, processList, i, outputDir);
 
         }
 
@@ -212,11 +218,11 @@ public class Mallocator {
         return outputMemory;
     }
 
-    public static LinkedList<int[]> worstFit(LinkedList<int[]> processList, LinkedList<int[]> memorySlots) {
+    public static LinkedList<MemorySlot> worstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
         return new LinkedList<>();
     }
 
-    public static LinkedList<int[]> bestFit(LinkedList<int[]> processList, LinkedList<int[]> memorySlots) {
+    public static LinkedList<MemorySlot> bestFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
         return new LinkedList<>();
     }
 
@@ -286,10 +292,17 @@ public class Mallocator {
         return processList;
     }
 
-    public static void generateOutputLog(Algorithms algorithm, LinkedList<MemorySlot> allocatedMemory, LinkedList<Process> processes, int fileIndex) {
+    public static void generateOutputLog(Algorithms algorithm, LinkedList<MemorySlot> allocatedMemory, LinkedList<Process> processes, int fileIndex, File outputDir) {
         try {
-            File outputFile = new File(algorithm.toString() + "output" + fileIndex + ".data");
+            // Putting the output in a folder
+            if (!outputDir.exists()) {
+                outputDir.mkdir();
+            }
+
+            File outputFile = new File(outputDir, algorithm.toString() + "output" + fileIndex + ".data");
+
             PrintWriter writer = new PrintWriter(new FileWriter(outputFile));
+
             // This will be used to keep track of what processes are allocated and unallocated for the last line of the output log
             List<Integer> allocatedProcesses = new ArrayList<>();
             List<Integer> unallocatedProcesses = new ArrayList<>();
