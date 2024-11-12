@@ -295,14 +295,4 @@ public class Mallocator {
         }
 
     }
-
-    public static void writeToFile(Algorithms algorithm, List<String[]> outputData) throws Exception {
-        File outputFile = new File(algorithm.toString() + "output.data");
-
-        PrintWriter writer = new PrintWriter(outputFile);
-
-        outputData.forEach(writer::println);
-
-        writer.close();
-    }
 }
