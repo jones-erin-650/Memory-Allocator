@@ -15,6 +15,10 @@ public class Mallocator {
         String memoryInputFile = "Minput.data";
         String processInputFile = "Pinput.data";
 
+        PrintWriter writer = new PrintWriter(new FileWriter("FFoutput.data"));
+        writer.println("please work :(");
+
+
 
 //      Contains the memory data from Minput.data
 //      memorySlots[0]: addresses of start of a free memory slot
@@ -32,6 +36,8 @@ public class Mallocator {
         System.out.println("processList: \n" + processList);
 
 //        writeToOutput(Algorithms.FF, processList);
+
+        LinkedList<Process> hardcodedProcesses = new LinkedList<>();
 
         LinkedList<MemorySlot> hardcodedOutput = new LinkedList<>();
         hardcodedOutput.add(new MemorySlot(100, 310, 2));
@@ -235,16 +241,16 @@ public class Mallocator {
             // This will be used to keep track of what processes are allocated and unallocated for the last line of the output log
             List<Integer> allocatedProcesses = new ArrayList<>();
             List<Integer> unallocatedProcesses = new ArrayList<>();
-            
+
             // Loop through the allocatedMemory and write the information
             for (MemorySlot memorySlot : allocatedMemory) {
                 System.out.println("memorySlot to be written to file: \n" + memorySlot);
                 String test = (memorySlot.getStart() + " " + memorySlot.getEnd() + " " + memorySlot.getProcessID());
                 System.out.println("String to be written to file: \n" + test);
 
-                writer.println("" + memorySlot.getStart() + memorySlot.getEnd() + memorySlot.getProcessID());
+                writer.println(test);
             }
-            
+
 //            // Find the processes that aren't allocated
 //            for (int i = 0; i < processes.size(); i++) {
 //                Process currentProcess = processes.get(i);
@@ -258,6 +264,7 @@ public class Mallocator {
 
             // Write -unallocated processes or -0 if they're all allocated
 
+            writer.close();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
