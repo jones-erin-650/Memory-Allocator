@@ -12,46 +12,31 @@ import java.util.Scanner;
 public class Mallocator {
 
     public static void main(String[] args) throws Exception {
-        String memoryInputFile = "Minput.data";
-        String processInputFile = "Pinput.data";
+        int datasets = 3;
 
-        PrintWriter writer = new PrintWriter(new FileWriter("FFoutput.data"));
-        writer.println("please work :(");
+        for (int i = 0; i < datasets; i++) {
+            System.out.println("\nRunning Algorithms on dataset " + i + "...\n");
 
+            String memoryInputFile = "Minput" + i + ".data";
+            String processInputFile = "Pinput" + i + ".data";
 
+            // Contains the memory data from Minput1.data
+            LinkedList<MemorySlot> memoryList = readMemoryInput(memoryInputFile);
+            System.out.println("...memoryList " + i + ":");
+            System.out.println("    " + memoryList + "...");
 
-//      Contains the memory data from Minput.data
-//      memorySlots[0]: addresses of start of a free memory slot
-//      memorySlots[1]: addresses of end of a free memory slot
-//      memorySlots[2]: 0 for unallocated 1 for allocated
-        LinkedList<MemorySlot> memoryList = readMemoryInput(memoryInputFile);
-        System.out.println("memoryList: \n" + memoryList);
-
-//      Contains the process data from Pinput.data
-//      processBlock[0]: process ID
-//      processBlock[1]: size of process
-//      processBlock[2]: 0 for unallocated 1 for allocated
-        LinkedList<Process> processList = readProcessInput(processInputFile);
-
-        System.out.println("processList: \n" + processList);
-
-//        writeToOutput(Algorithms.FF, processList);
-
-//        LinkedList<Process> hardcodedTestProcesses = new LinkedList<>();
-//        hardcodedTestProcesses.add(new Process(1, 190, true));
-//        hardcodedTestProcesses.add(new Process(2, 210, true));
-//        hardcodedTestProcesses.add(new Process(3, 205, true));
-//
-//        LinkedList<MemorySlot> hardcodedOutput = new LinkedList<>();
-//        hardcodedOutput.add(new MemorySlot(100, 310, 2));
-//        hardcodedOutput.add(new MemorySlot(600, 790, 1));
-//        hardcodedOutput.add(new MemorySlot(1500, 1705, 3));
-
-//        System.out.println("hardcodedOutput: " + hardcodedOutput);
-
-//        generateOutputLog(Algorithms.FF, hardcodedOutput, hardcodedTestProcesses);
+            //      Contains the process data from Pinput0.data
+            LinkedList<Process> processList = readProcessInput(processInputFile);
+            System.out.println("...processList " + i + ":");
+            System.out.println("    " + processList + "...");
 
 
+            LinkedList<MemorySlot> ffOutput = firstFit(processList, memoryList);
+            generateOutputLog(Algorithms.FF, ffOutput, processList, i);
+
+            // TODO: Generate the other algorithms
+
+        }
 
     }
 
@@ -102,6 +87,7 @@ public class Mallocator {
             return "MemorySlot{" +
                     "start=" + start +
                     ", end=" + end +
+                    ", size=" + size +
                     ", processID=" + processID +
                     '}';
         }
@@ -165,54 +151,65 @@ public class Mallocator {
         BF
     }
 
-    public static LinkedList<int[]> firstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
+    public static LinkedList<MemorySlot> firstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
         LinkedList<MemorySlot> outputMemory = new LinkedList<>();
+        int debugIndex = 0;
 
         // Loop through the Processes
         for (Process process : processList) {
+
+            System.out.println("\nProcess " + process.getId() + " " + process);
             // Instantiate currentProcess information to be easier to read
             int processID = process.getId();
             int processSize = process.getSize();
 
-            for (MemorySlot memorySlot : memoryList) {
-                int memoryStart = 0;
-                int memoryEnd = 0;
+            // This needs to be a fori loop because it memoryList changes size
+            for (int j = 0; j < memoryList.size(); j++) {
+                MemorySlot memorySlot = memoryList.get(j);
+                System.out.println("MemorySlot " + j + " " + memorySlot);
+                int memoryStart = memorySlot.getStart();
+                int memoryEnd = memorySlot.getEnd();
+                int memorySize = memorySlot.getSize();
 
                 // Inner for loop to check if the current process can fit in any MemorySlot
 
+                // If currentProcess' size is less than the memorySlot's size then allocate it
                 // If the memorySlot is already allocated then skip it
-                if (memorySlot.getProcessID() != 0) {
-                    break;
-                } else if (processSize < memorySlot.getSize()) {
-                    // If currentProcess' size is less than the memorySlot's size then allocate it
+                if (processSize < memorySize && memorySlot.getProcessID() == 0) {
+                    System.out.println("...Allocated Process " + processID + " to MemorySlot " + j + "...");
                     // Mark currentProcess as allocated for the output log's logic
                     process.setAllocated(true);
 
                     // Create a new memorySlot to be added to the output list
                     // Change the size of the allocated process
-                    int allocatedMemoryEnd = memoryStart + processSize;
+                    int outputMemoryEnd = memoryStart + processSize;
 
-                    MemorySlot allocatedMemorySlot = new MemorySlot(memoryStart, allocatedMemoryEnd, processID);
-
-                    allocatedMemorySlot.setProcessID(process.getId());
+                    MemorySlot outputMemorySlot = new MemorySlot(memoryStart, outputMemoryEnd, processID);
 
                     // Add the new memorySlot to the new List
-                    outputMemory.add(allocatedMemorySlot);
+                    outputMemory.add(outputMemorySlot);
 
                     // Take the remaining space and create a new memorySlot to be added to the list
-                    int remainingSpace = memoryEnd - allocatedMemoryEnd;
-                    MemorySlot remainingMemory = new MemorySlot(allocatedMemoryEnd + 1, remainingSpace, 0);
+                    int remainingSpace = memoryEnd - outputMemoryEnd;
+                    if (remainingSpace > 0) {
+                        // Create a new MemorySlot for the remaining space
+                        MemorySlot remainingMemory = new MemorySlot(outputMemoryEnd, outputMemoryEnd + remainingSpace, 0);
+                        // Replace the current space with that new space so it's in the right location and the old space doesn't get used
+                        memoryList.set(j, remainingMemory);
+                    }
 
-                    // Add that as a new slot in the list
-                    memoryList.add(remainingMemory);
+                    // This ensures that one process won't be allocated to multiple slots
+                    break;
 
                 }
 
             }
+            System.out.println("--OutputMemory: " + outputMemory + "--");
+            debugIndex++;
         }
 
 
-        return new LinkedList<>();
+        return outputMemory;
     }
 
     public static LinkedList<int[]> worstFit(LinkedList<int[]> processList, LinkedList<int[]> memorySlots) {
@@ -289,9 +286,9 @@ public class Mallocator {
         return processList;
     }
 
-    public static void generateOutputLog(Algorithms algorithm, LinkedList<MemorySlot> allocatedMemory, LinkedList<Process> processes) {
+    public static void generateOutputLog(Algorithms algorithm, LinkedList<MemorySlot> allocatedMemory, LinkedList<Process> processes, int fileIndex) {
         try {
-            File outputFile = new File(algorithm.toString() + "output.data");
+            File outputFile = new File(algorithm.toString() + "output" + fileIndex + ".data");
             PrintWriter writer = new PrintWriter(new FileWriter(outputFile));
             // This will be used to keep track of what processes are allocated and unallocated for the last line of the output log
             List<Integer> allocatedProcesses = new ArrayList<>();
