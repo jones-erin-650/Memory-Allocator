@@ -6,24 +6,21 @@ import java.util.List;
 public class AlgorithmResponse {
     LinkedList<MemorySlot> outputMemory;
     LinkedList<Process> outputProcesses;
-    List<Integer> allocatedProcesses;
-    List<Integer> unallocatedProcesses;
+    List<Process> allocatedProcesses;
+    List<Process> unallocatedProcesses;
 
-    public AlgorithmResponse(LinkedList<MemorySlot> outputMemory, List<Integer> allocatedProcesses, List<Integer> unallocatedProcesses) {
+    public AlgorithmResponse(LinkedList<MemorySlot> outputMemory, LinkedList<Process> outputProcesses) {
         this.outputMemory = outputMemory;
-        this.allocatedProcesses = allocatedProcesses;
-        this.unallocatedProcesses = unallocatedProcesses;
+        this.outputProcesses = outputProcesses;
     }
 
     public LinkedList<MemorySlot> getOutputMemory() {
         return outputMemory;
     }
 
-    public List<Integer> getAllocatedProcesses() {
-        return allocatedProcesses;
+    public LinkedList<Process> getOutputProcesses() {
+        return outputProcesses;
     }
 
-    public List<Integer> getUnallocatedProcesses() {
-        return unallocatedProcesses;
-    }
+
 }

@@ -14,29 +14,38 @@ public class Mallocator {
     public static void main(String[] args) throws Exception {
         int datasets = 3;
         int chosenDataset = 0;
+
         File outputDir = new File("outputs");
         File inputDir = new File("inputs");
         String memoryInputFile = "Minput" + chosenDataset + ".data";
         String processInputFile = "Pinput" + chosenDataset + ".data";
         LinkedList<MemorySlot> memoryList = readMemoryInput(memoryInputFile);
         LinkedList<Process> processList = readProcessInput(processInputFile);
-        LinkedList<MemorySlot> ffOutput = bestFit(processList, memoryList);
-        generateOutputLog(Algorithms.FF, ffOutput, processList, chosenDataset, outputDir);
+        AlgorithmResponse ffOutput = firstFit(processList, memoryList);
+        generateOutputLog(Algorithms.FF, ffOutput, chosenDataset, outputDir);
 
+        for (int i = 1; i <= datasets; i++) {
+            System.out.println("\n...Performing algorithms on dataset 1...\n");
 
+            for (int j = 0; j <= 3; j++) {
+                switch (j) {
+                    case 0:
+                }
 
-
-
-
+            }
+        }
     }
 
-    public static LinkedList<MemorySlot> firstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
+    public static AlgorithmResponse firstFit(LinkedList<Process> inputProcesses, LinkedList<MemorySlot> memoryList) {
+        // Dereference the processes so the original data is read only
+        LinkedList<Process> outputProcessses = inputProcesses;
+
         LinkedList<MemorySlot> outputMemory = new LinkedList<>();
+
         int debugIndex = 0;
 
         // Loop through the Processes
-        for (Process process : processList) {
-
+        for (Process process : outputProcessses) {
 
             System.out.println("\nProcess " + process.getId() + " " + process);
             // Instantiate currentProcess information to be easier to read
@@ -88,11 +97,10 @@ public class Mallocator {
             debugIndex++;
         }
 
-
-        return outputMemory;
+        return new AlgorithmResponse(outputMemory, outputProcessses);
     }
 
-    public static LinkedList<MemorySlot> worstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
+    public LinkedList<MemorySlot> worstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
         return new LinkedList<>();
     }
 
@@ -239,8 +247,11 @@ public class Mallocator {
     }
 
     // TODO: the algorithms should all return a response that has the memoryOutput AND a list of allocated processes, this way the processList doesn't have to be written to and it can be reused
-    public static void generateOutputLog(Algorithms algorithm, LinkedList<MemorySlot> allocatedMemory, LinkedList<Process> processes, int fileIndex, File outputDir) {
+    public static void generateOutputLog(Algorithms algorithm, AlgorithmResponse inputData, int fileIndex, File outputDir) {
         try {
+            LinkedList<MemorySlot> allocatedMemory = inputData.outputMemory;
+            LinkedList<Process> processes = inputData.getOutputProcesses();
+
             // Putting the output in a folder
             if (!outputDir.exists()) {
                 outputDir.mkdir();
@@ -257,10 +268,10 @@ public class Mallocator {
             // Loop through the allocatedMemory and write the information
             for (MemorySlot memorySlot : allocatedMemory) {
 //                System.out.println("memorySlot to be written to file: \n" + memorySlot);
-                String test = (memorySlot.getStart() + " " + memorySlot.getEnd() + " " + memorySlot.getProcessID());
+                String outputString = (memorySlot.getStart() + " " + memorySlot.getEnd() + " " + memorySlot.getProcessID());
 //                System.out.println("String to be written to file: \n" + test);
 
-                writer.println(test);
+                writer.println(outputString);
             }
 
             // Find the processes that aren't allocated
