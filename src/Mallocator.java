@@ -94,8 +94,78 @@ public class Mallocator {
         return new AlgorithmResponse(outputMemory, processes);
     }
 
-    public static AlgorithmResponse worstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
-        return new AlgorithmResponse();
+    public static AlgorithmResponse worstFit(LinkedList<Process> processes, LinkedList<MemorySlot> memoryList) {
+        LinkedList<MemorySlot> outputMemory = new LinkedList<>();
+
+        // Loop through the Processes
+        for (Process process : processes) {
+
+            System.out.println("\nProcess " + process.getId() + " " + process);
+
+            // Instantiate currentProcess information to be easier to read
+            int processID = process.getId();
+            int processSize = process.getSize();
+
+            // Will hold the memorySlot to be accessed outside the inner loop
+            MemorySlot biggestSlot = null;
+            int biggestMemoryIndex = -1;
+
+            // This needs to be a fori loop because it memoryList changes size
+            for (int j = 0; j < memoryList.size(); j++) {
+                MemorySlot memorySlot = memoryList.get(j);
+                System.out.println("    MemorySlot " + j + " " + memorySlot);
+                int memoryStart = memorySlot.getStart();
+                int memoryEnd = memorySlot.getEnd();
+                int memorySize = memorySlot.getSize();
+
+                // Memory slot doesn't have a process in it
+                if(memorySlot.getProcessID() == 1) {
+                    continue;
+                }
+                // If there's nothing assigned to biggestSlot then assign the first memory slot that fits the process
+                else if(biggestSlot == null && processSize <= memorySize) {
+                    biggestSlot = memorySlot;
+                    biggestMemoryIndex = j;
+                } else if(biggestSlot != null && processSize <= memorySize && memorySize > biggestSlot.getSize()) {
+                    biggestSlot = memorySlot;
+                    biggestMemoryIndex = j;
+                }
+            }
+
+            // Allocate the process only after all the memory slots have been checked
+            if (biggestSlot != null) {
+                int biggestSlotStart = biggestSlot.getStart();
+                int biggestSlotEnd = biggestSlot.getEnd();
+                int biggestSlotSize = biggestSlot.getSize();
+
+                System.out.println("    ...Allocated Process " + processID + " to MemorySlot " + biggestMemoryIndex + "...");
+                // Mark currentProcess as allocated for the output log's logic
+                process.setAllocated(true);
+
+                // Create a new memorySlot to be added to the output list
+                // Change the size of the allocated process
+                // The allocatedMemory can only be smaller than or equal to the size of smallestSlot, this is the memory region the allocated process takes up
+                int allocatedRegionEnd = biggestSlotStart + processSize;
+
+                MemorySlot allocatedMemoryRegion = new MemorySlot(biggestSlotStart, allocatedRegionEnd, processID);
+
+                // Add the new memorySlot to the new List
+                outputMemory.add(allocatedMemoryRegion);
+
+                // Take the remaining space and create a new memorySlot to be added to the list
+                int remainingSpace = biggestSlotEnd - allocatedRegionEnd;
+                if (remainingSpace > 0) {
+                    // Create a new MemorySlot for the remaining space
+                    MemorySlot remainingMemory = new MemorySlot(allocatedRegionEnd, biggestSlotEnd, 0);
+                    // Replace the current space with that new space so it's in the right location and the old space doesn't get used
+                    memoryList.set(biggestMemoryIndex, remainingMemory);
+                }
+            }
+
+            System.out.println("OutputMemory: " + outputMemory);
+        }
+        return new AlgorithmResponse(outputMemory, processes);
+
     }
 
     public static AlgorithmResponse bestFit(LinkedList<Process> processes, LinkedList<MemorySlot> memoryList) {
