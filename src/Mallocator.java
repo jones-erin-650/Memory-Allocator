@@ -4,10 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Mallocator {
 
@@ -24,8 +21,8 @@ public class Mallocator {
             String memoryInputFile = new File(inputDir, "Minput" + i + ".data").getPath();
             String processInputFile = new File(inputDir, "Pinput" + i + ".data").getPath();
 
-//            System.out.println("\n--Performing firstFit on dataset " + i + "--");
-//            performAlgorithm(Algorithms.FF, memoryInputFile, processInputFile, i, outputDir);
+            System.out.println("\n--Performing firstFit on dataset " + i + "--");
+            performAlgorithm(Algorithms.FF, memoryInputFile, processInputFile, i, outputDir);
             System.out.println("\n--Performing bestFit on dataset " + i + "--");
             performAlgorithm(Algorithms.BF, memoryInputFile, processInputFile, i, outputDir);
             System.out.println("\n--Performing worstFit on dataset " + i + "--");
@@ -310,6 +307,8 @@ public class Mallocator {
         try {
             LinkedList<MemorySlot> allocatedMemory = inputData.getOutputMemory();
             LinkedList<Process> processes = inputData.getOutputProcesses();
+
+            allocatedMemory.sort(Comparator.comparingInt(MemorySlot::getStart));
 
             // Putting the output in a folder
             if (!outputDir.exists()) {
