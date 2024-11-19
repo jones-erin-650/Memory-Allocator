@@ -16,10 +16,14 @@ public class Mallocator {
 
         for (int i = 0; i < datasets; i++) {
             System.out.println("\n...Performing algorithms on dataset " + i + "...\n");
+
             File outputDir = new File("outputs");
-            File inputDir = new File("inputs");
-            String memoryInputFile = "Minput" + i + ".data";
-            String processInputFile = "Pinput" + i + ".data";
+
+            File inputDir = new File(".", "inputs");
+
+            String memoryInputFile = new File(inputDir, "Minput" + i + ".data").getPath();
+            String processInputFile = new File(inputDir, "Pinput" + i + ".data").getPath();
+
             LinkedList<MemorySlot> memoryList = readMemoryInput(memoryInputFile);
             LinkedList<Process> processList = readProcessInput(processInputFile);
 
@@ -176,9 +180,9 @@ public class Mallocator {
         return new AlgorithmResponse(outputMemory, dereferencedProcesses);
     }
 
-    public static LinkedList<MemorySlot> readMemoryInput(String memoryInput) {
-        InputStream inputStream = Mallocator.class.getResourceAsStream(memoryInput);
-        Scanner scanner = new Scanner(inputStream);
+    public static LinkedList<MemorySlot> readMemoryInput(String memoryInput) throws FileNotFoundException {
+        File memoryFile = new File(memoryInput);
+        Scanner scanner = new Scanner(memoryFile);
 
 //        First line is always the number of memoryblocks
         int numberOfMemorySlots = Integer.parseInt(scanner.nextLine());
@@ -209,9 +213,9 @@ public class Mallocator {
 
     }
 
-    public static LinkedList<Process> readProcessInput(String processInput) {
-        InputStream inputStream = Mallocator.class.getResourceAsStream(processInput);
-        Scanner scanner = new Scanner(inputStream);
+    public static LinkedList<Process> readProcessInput(String processInput) throws FileNotFoundException {
+       File processFile = new File(processInput);
+       Scanner scanner = new Scanner(processFile);
 
 //        First line is always the number of processes
         int numberOfProcesses = Integer.parseInt(scanner.nextLine());
@@ -223,7 +227,7 @@ public class Mallocator {
 //              Split the line by the spaces
             String line = scanner.nextLine();
 //            Doing it with another scanner because doing line.split would require changing the variable's type a lot and that's not ideal
-//            TODO: having another scanner isn't ideal, causes more overhead
+
             Scanner lineParser = new Scanner(line);
 
             int processId = lineParser.nextInt();
