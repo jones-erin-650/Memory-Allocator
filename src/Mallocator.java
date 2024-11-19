@@ -345,7 +345,7 @@ public class Mallocator {
             
             // ALl processes are allocated
             if (allocatedProcesses.size() == processes.size()) {
-                writer.println("-0");
+                writer.print("-0");
             } else {
                 writer.print("-");
                 for (int i = 0; i < unallocatedProcesses.size(); i++) {
