@@ -24,26 +24,21 @@ public class Mallocator {
             String memoryInputFile = new File(inputDir, "Minput" + i + ".data").getPath();
             String processInputFile = new File(inputDir, "Pinput" + i + ".data").getPath();
 
-            LinkedList<MemorySlot> memoryList = readMemoryInput(memoryInputFile);
-            LinkedList<Process> processList = readProcessInput(processInputFile);
-
-            System.out.println("\n--Performing firstFit on dataset " + i + "--");
-            performAlgorithm(Algorithms.FF, processList, memoryList, i, outputDir);
+//            System.out.println("\n--Performing firstFit on dataset " + i + "--");
+//            performAlgorithm(Algorithms.FF, memoryInputFile, processInputFile, i, outputDir);
             System.out.println("\n--Performing bestFit on dataset " + i + "--");
-            performAlgorithm(Algorithms.BF, processList, memoryList, i, outputDir);
+            performAlgorithm(Algorithms.BF, memoryInputFile, processInputFile, i, outputDir);
             System.out.println("\n--Performing worstFit on dataset " + i + "--");
-            performAlgorithm(Algorithms.WF, processList, memoryList, i, outputDir);
+            performAlgorithm(Algorithms.WF, memoryInputFile, processInputFile, i, outputDir);
         }
     }
 
-    public static AlgorithmResponse firstFit(LinkedList<Process> referencedProcesses, LinkedList<MemorySlot> memoryList) {
-        // Dereference the processes so the original data is read only
-        LinkedList<Process> dereferencedProcesses = referencedProcesses;
+    public static AlgorithmResponse firstFit(LinkedList<Process> processes, LinkedList<MemorySlot> memoryList) {
 
         LinkedList<MemorySlot> outputMemory = new LinkedList<>();
 
         // Loop through the Processes
-        for (Process process : dereferencedProcesses) {
+        for (Process process : processes) {
 
             System.out.println("\nProcess " + process.getId() + " " + process);
             // Instantiate currentProcess information to be easier to read
@@ -96,21 +91,18 @@ public class Mallocator {
 
         System.out.println("\n..FirstFit Algorithm Complete..\n");
         System.out.println("Final OutputMemory: " + outputMemory + "--");
-        return new AlgorithmResponse(outputMemory, dereferencedProcesses);
+        return new AlgorithmResponse(outputMemory, processes);
     }
 
     public static AlgorithmResponse worstFit(LinkedList<Process> processList, LinkedList<MemorySlot> memoryList) {
         return new AlgorithmResponse();
     }
 
-    public static AlgorithmResponse bestFit(LinkedList<Process> referencedProcesses, LinkedList<MemorySlot> memoryList) {
+    public static AlgorithmResponse bestFit(LinkedList<Process> processes, LinkedList<MemorySlot> memoryList) {
         LinkedList<MemorySlot> outputMemory = new LinkedList<>();
-        LinkedList<Process> dereferencedProcesses = referencedProcesses;
-
-        int debugIndex = 0;
 
         // Loop through the Processes
-        for (Process process : dereferencedProcesses) {
+        for (Process process : processes) {
 
             System.out.println("\nProcess " + process.getId() + " " + process);
 
@@ -119,7 +111,7 @@ public class Mallocator {
             int processSize = process.getSize();
 
             // Will hold the memorySlot to be accessed outside the inner loop
-            MemorySlot smallestPossibleSlot = null;
+            MemorySlot smallestSlot = null;
             int smallestMemoryIndex = -1;
 
             // This needs to be a fori loop because it memoryList changes size
@@ -130,24 +122,25 @@ public class Mallocator {
                 int memoryEnd = memorySlot.getEnd();
                 int memorySize = memorySlot.getSize();
 
-                if(memorySlot.getProcessID() != 0) {
+                // Memory slot doesn't have a process in it
+                if(memorySlot.getProcessID() == 1) {
                     continue;
                 }
                 // If there's nothing assigned to smallestPossibleSlot then assign the first memory slot that fits the process
-                if(smallestPossibleSlot == null && processSize < memorySize) {
-                    smallestPossibleSlot = memorySlot;
+                else if(smallestSlot == null && processSize <= memorySize) {
+                    smallestSlot = memorySlot;
                     smallestMemoryIndex = j;
-                } else if(processSize <= memorySize && memorySize < smallestPossibleSlot.getSize()) {
-                    smallestPossibleSlot = memorySlot;
+                } else if(smallestSlot != null && processSize <= memorySize && memorySize < smallestSlot.getSize()) {
+                    smallestSlot = memorySlot;
                     smallestMemoryIndex = j;
                 }
             }
 
             // Allocate the process only after all the memory slots have been checked
-            if (smallestPossibleSlot != null) {
-                int memoryStart = smallestPossibleSlot.getStart();
-                int memoryEnd = smallestPossibleSlot.getEnd();
-                int memorySize = smallestPossibleSlot.getSize();
+            if (smallestSlot != null) {
+                int smallestSlotStart = smallestSlot.getStart();
+                int smallestSlotEnd = smallestSlot.getEnd();
+                int smallestSlotSize = smallestSlot.getSize();
 
                 System.out.println("    ...Allocated Process " + processID + " to MemorySlot " + smallestMemoryIndex + "...");
                 // Mark currentProcess as allocated for the output log's logic
@@ -155,29 +148,27 @@ public class Mallocator {
 
                 // Create a new memorySlot to be added to the output list
                 // Change the size of the allocated process
-                int outputMemoryEnd = memoryStart + processSize;
+                // The allocatedMemory can only be smaller than or equal to the size of smallestSlot, this is the memory region the allocated process takes up
+                int allocatedRegionEnd = smallestSlotStart + processSize;
 
-                MemorySlot outputMemorySlot = new MemorySlot(memoryStart, outputMemoryEnd, processID);
+                MemorySlot allocatedMemoryRegion = new MemorySlot(smallestSlotStart, allocatedRegionEnd, processID);
 
                 // Add the new memorySlot to the new List
-                outputMemory.add(outputMemorySlot);
+                outputMemory.add(allocatedMemoryRegion);
 
                 // Take the remaining space and create a new memorySlot to be added to the list
-                int remainingSpace = memoryEnd - outputMemoryEnd;
+                int remainingSpace = smallestSlotEnd - allocatedRegionEnd;
                 if (remainingSpace > 0) {
                     // Create a new MemorySlot for the remaining space
-                    MemorySlot remainingMemory = new MemorySlot(outputMemoryEnd, outputMemoryEnd + remainingSpace, 0);
+                    MemorySlot remainingMemory = new MemorySlot(allocatedRegionEnd, smallestSlotEnd, 0);
                     // Replace the current space with that new space so it's in the right location and the old space doesn't get used
                     memoryList.set(smallestMemoryIndex, remainingMemory);
                 }
             }
 
-
-
-                System.out.println("OutputMemory: " + outputMemory);
-            debugIndex++;
+            System.out.println("OutputMemory: " + outputMemory);
         }
-        return new AlgorithmResponse(outputMemory, dereferencedProcesses);
+        return new AlgorithmResponse(outputMemory, processes);
     }
 
     public static LinkedList<MemorySlot> readMemoryInput(String memoryInput) throws FileNotFoundException {
@@ -305,17 +296,24 @@ public class Mallocator {
 
     }
 
-    public static void performAlgorithm(Algorithms algorithm, LinkedList<Process> processList, LinkedList<MemorySlot> memoryList, int fileIndex, File outputDir) {
+    public static void performAlgorithm(Algorithms algorithm, String memoryInputFile, String processInputFile, int fileIndex, File outputDir) throws FileNotFoundException {
         AlgorithmResponse response = null;
+
+        LinkedList<MemorySlot> memoryList = readMemoryInput(memoryInputFile);
+        LinkedList<Process> processList = readProcessInput(processInputFile);
 
         switch(algorithm) {
             case FF:
+
                 response = firstFit(processList, memoryList);
                 break;
             case BF:
                 response = bestFit(processList, memoryList);
+                System.out.println("-----------RESPONSE---------" + response);
+                break;
             case WF:
                 response = worstFit(processList, memoryList);
+                break;
         }
 
         generateOutputLog(algorithm, response, fileIndex, outputDir);

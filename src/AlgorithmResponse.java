@@ -14,6 +14,7 @@ public class AlgorithmResponse {
     }
 
     public AlgorithmResponse() {
+
     }
 
     public LinkedList<MemorySlot> getOutputMemory() {
@@ -24,5 +25,11 @@ public class AlgorithmResponse {
         return outputProcesses;
     }
 
-
+    @Override
+    public String toString() {
+        return "AlgorithmResponse{" +
+                "outputMemory=" + outputMemory +
+                ", outputProcesses=" + outputProcesses +
+                '}';
+    }
 }
